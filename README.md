@@ -1,1 +1,6 @@
-# trab3-lfa2024
+implementar(python)
+AF => ER
+
+Entrada: AF(AFN ou AFD ou AFNe)
+Saida: ER
+Data: 16/09/2024

@@ -1,7 +1,7 @@
 # Trabalho 3 de LFA
 # Alunos: 
 # Felipe Echeverria Vilhalva RGM: 45611
-# Bruno                      RGM:
+# Bruno RGM:
 
 class Automato:
     def __init__(self) -> None:
