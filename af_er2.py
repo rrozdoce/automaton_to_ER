@@ -53,7 +53,7 @@ class AFD:
 
         while pilha:
             conjunto = pilha.pop()
-            conjunto_str = ''.join(conjunto) if conjunto else '∅'
+            conjunto_str = ''.join(conjunto) if conjunto else ''
             if conjunto_str in visitados:
                 continue
             visitados.add(conjunto_str)
@@ -70,45 +70,43 @@ class AFD:
                         destinos.extend(afn.transicoes[(estado, simbolo)])
 
                 epsilon_destinos = afn.epsilon_fechamento(destinos)
-                destino_str = ''.join(epsilon_destinos) if epsilon_destinos else '∅'
+                destino_str = ''.join(epsilon_destinos) if epsilon_destinos else ''
 
                 afd.transicoes[(conjunto_str, simbolo)] = destino_str
 
                 if destino_str and destino_str not in visitados:
                     pilha.append(epsilon_destinos)
 
-        afd.estado_inicial = ''.join(afd_estado_inicial) if afd_estado_inicial else '∅'
+        afd.estado_inicial = ''.join(afd_estado_inicial) if afd_estado_inicial else ''
         return afd
     
     def criar_er(self):
         # Inicializar uma matriz de expressões regulares
         estados = self.estados
-        n = len(estados)
         tabela = {estado: {estado2: '' for estado2 in estados} for estado in estados}
-    
+
         # Preencher a tabela com as transições existentes
         for (origem, simbolo), destino in self.transicoes.items():
-            if destino != '∅':
+            if destino:  # Verifica se destino não está vazio
                 if tabela[origem][destino] == '':
                     tabela[origem][destino] = simbolo
                 else:
                     tabela[origem][destino] += f"|{simbolo}"
-    
+
         # Adicionar expressões para transições diretas múltiplas
         for origem in estados:
             for destino in estados:
                 if origem == destino and tabela[origem][destino] != '':
                     tabela[origem][destino] = f"({tabela[origem][destino]})*"
-    
+
         # Construir a expressão regular a partir das transições
-        # Esta é uma implementação simplificada e pode não cobrir todos os casos
         regex = ""
         for estado_inicial in [self.estado_inicial]:
             for estado_final in self.estados_finais:
                 if tabela[estado_inicial][estado_final]:
                     regex += tabela[estado_inicial][estado_final]
-    
-        return regex if regex else "∅"
+
+        return regex if regex else ""
 
 def ler_entradas_usuario():
     print("---------Conversão AFN para AFD---------------")
