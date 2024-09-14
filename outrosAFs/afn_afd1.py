@@ -1,8 +1,3 @@
-# Trabalho 3 de LFA
-# Alunos: 
-# Felipe Echeverria Vilhalva RGM: 45611
-# Bruno RGM:
-
 class AFN:
     def __init__(self, estados, alfabeto, transicoes, estado_inicial, estados_finais):
         self.estados = estados
