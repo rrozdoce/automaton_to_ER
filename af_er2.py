@@ -73,6 +73,25 @@ class AFD:
 
         afd.estado_inicial = ''.join(afd_estado_inicial) if afd_estado_inicial else '∅'
         return afd
+    
+    def criar_er(self):
+        msg = ""
+        estado_atual = ""
+        number = 0
+        
+        # método para exibir as transições do AFD
+        print("\nTransições do AFD")
+        for (estado_origem, simbolo), estado_destino in self.transicoes.items():
+            if estado_origem != estado_atual and number != 0:
+                msg += "+"
+                estado_atual = estado_origem
+            if estado_origem == estado_destino:
+                msg += simbolo + "*"
+            else:
+                msg += simbolo
+            number = 1
+            
+        return msg
 
 def ler_entradas_usuario():
     print("---------Conversão AFN para AFD---------------")
@@ -99,22 +118,6 @@ afn = ler_entradas_usuario()
 # Chamada da função para converter o AFN em AFD
 afd = AFD.converter_afn_para_afd(afn)
 
-# Exibindo os resultados
-print("---------Resultado da Conversão---------")
-print("Estados:")
-for estado in afd.estados:
-    print(estado)
+er = afd.criar_er()
 
-print("\nAlfabeto:")
-print(afd.alfabeto)
-
-print("\nTransições:")
-for transicao, destino in afd.transicoes.items():
-    print(f"D({transicao[0]}, {transicao[1]}): {destino}")
-
-print("\nEstado Inicial:")
-print(afd.estado_inicial)
-
-print("\nEstados Finais:")
-for estado_final in afd.estados_finais:
-    print(estado_final)
+print(er)
