@@ -25,18 +25,24 @@ class AFN:
 
 
 class AFD:
-    def __init__(self):
-        self.estados = []
-        self.alfabeto = []
-        self.transicoes = {}
-        self.estado_inicial = None
-        self.estados_finais = []
+    def __init__(self, estados=None, alfabeto=None, transicoes=None, estado_inicial=None, estados_finais=None):
+        self.estados = estados if estados is not None else []
+        self.alfabeto = alfabeto if alfabeto is not None else []
+        self.transicoes = transicoes if transicoes is not None else {}
+        self.estado_inicial = estado_inicial
+        self.estados_finais = estados_finais if estados_finais is not None else []
 
     @classmethod
     def converter_afn_para_afd(cls, afn):
         if afn.epsilon_fechamento([afn.estado_inicial]) == [afn.estado_inicial] and all(len(destinos) <= 1 for (estado, simbolo), destinos in afn.transicoes.items()):
             print("O autômato fornecido já é um AFD.")
-            return cls(estados=afn.estados, alfabeto=afn.alfabeto, transicoes=afn.transicoes, estado_inicial=afn.estado_inicial, estados_finais=afn.estados_finais)
+            afd = cls()
+            afd.estados = afn.estados
+            afd.alfabeto = afn.alfabeto
+            afd.transicoes = afn.transicoes
+            afd.estado_inicial = afn.estado_inicial
+            afd.estados_finais = afn.estados_finais
+            return afd
                
         afd = cls()
         afd.alfabeto = [simbolo for simbolo in afn.alfabeto if simbolo != '']
@@ -75,42 +81,55 @@ class AFD:
         return afd
     
     def criar_er(self):
-        msg = ""
-        estado_atual = ""
-        number = 0
-        
-        # método para exibir as transições do AFD
-        print("\nTransições do AFD")
-        for (estado_origem, simbolo), estado_destino in self.transicoes.items():
-            if estado_origem != estado_atual and number != 0:
-                msg += "+"
-                estado_atual = estado_origem
-            if estado_origem == estado_destino:
-                msg += simbolo + "*"
-            else:
-                msg += simbolo
-            number = 1
-            
-        return msg
+        # Inicializar uma matriz de expressões regulares
+        estados = self.estados
+        n = len(estados)
+        tabela = {estado: {estado2: '' for estado2 in estados} for estado in estados}
+    
+        # Preencher a tabela com as transições existentes
+        for (origem, simbolo), destino in self.transicoes.items():
+            if destino != '∅':
+                if tabela[origem][destino] == '':
+                    tabela[origem][destino] = simbolo
+                else:
+                    tabela[origem][destino] += f"|{simbolo}"
+    
+        # Adicionar expressões para transições diretas múltiplas
+        for origem in estados:
+            for destino in estados:
+                if origem == destino and tabela[origem][destino] != '':
+                    tabela[origem][destino] = f"({tabela[origem][destino]})*"
+    
+        # Construir a expressão regular a partir das transições
+        # Esta é uma implementação simplificada e pode não cobrir todos os casos
+        regex = ""
+        for estado_inicial in [self.estado_inicial]:
+            for estado_final in self.estados_finais:
+                if tabela[estado_inicial][estado_final]:
+                    regex += tabela[estado_inicial][estado_final]
+    
+        return regex if regex else "∅"
 
 def ler_entradas_usuario():
     print("---------Conversão AFN para AFD---------------")
-    estados = input("Informe os estados: ").split(",")
-    alfabeto = input("Informe o alfabeto: ").split(",")
+    estados = input("Informe os estados (separados por vírgula): ").split(",")
+    alfabeto = input("Informe o alfabeto (separados por vírgula): ").split(",")
     alfabeto.append('')  # Adicionando o símbolo vazio ao alfabeto
     transicoes = {}
 
-    print("Informe as transições:")
+    print("Informe as transições (pressione Enter para nenhuma transição):")
     for estado in estados:
         for simbolo in alfabeto:
-            proximos_estados = input(f"D({estado},{simbolo}): ").split(",")
-            transicoes[(estado, simbolo)] = proximos_estados
+            entrada = input(f"D({estado},{'ε' if simbolo == '' else simbolo}): ").strip()
+            if entrada == '':
+                transicoes[(estado, simbolo)] = []
+            else:
+                transicoes[(estado, simbolo)] = entrada.split(",")
 
-    estado_inicial = input("Informe o estado inicial: ")
-    estados_de_aceitacao = input("Informe o(s) estado(s) de aceitação: ").split(",")
+    estado_inicial = input("Informe o estado inicial: ").strip()
+    estados_de_aceitacao = input("Informe o(s) estado(s) de aceitação (separados por vírgula): ").split(",")
 
     return AFN(estados, alfabeto, transicoes, estado_inicial, estados_de_aceitacao)
-
 
 # Leitura das entradas do usuário
 afn = ler_entradas_usuario()
@@ -118,6 +137,8 @@ afn = ler_entradas_usuario()
 # Chamada da função para converter o AFN em AFD
 afd = AFD.converter_afn_para_afd(afn)
 
+# Geração da expressão regular
 er = afd.criar_er()
 
+print("Expressão regular gerada:")
 print(er)
