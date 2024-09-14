@@ -81,32 +81,23 @@ class AFD:
         return afd
     
     def criar_er(self):
-        # Inicializar uma matriz de expressões regulares
-        estados = self.estados
-        tabela = {estado: {estado2: '' for estado2 in estados} for estado in estados}
-
-        # Preencher a tabela com as transições existentes
-        for (origem, simbolo), destino in self.transicoes.items():
-            if destino:  # Verifica se destino não está vazio
-                if tabela[origem][destino] == '':
-                    tabela[origem][destino] = simbolo
-                else:
-                    tabela[origem][destino] += f"|{simbolo}"
-
-        # Adicionar expressões para transições diretas múltiplas
-        for origem in estados:
-            for destino in estados:
-                if origem == destino and tabela[origem][destino] != '':
-                    tabela[origem][destino] = f"({tabela[origem][destino]})*"
-
-        # Construir a expressão regular a partir das transições
-        regex = ""
-        for estado_inicial in [self.estado_inicial]:
-            for estado_final in self.estados_finais:
-                if tabela[estado_inicial][estado_final]:
-                    regex += tabela[estado_inicial][estado_final]
-
-        return regex if regex else ""
+        msg = ""
+        estado_atual = ""
+        number = 0
+        
+        # método para exibir as transições do AFD
+        print("\nTransições do AFD")
+        for (estado_origem, simbolo), estado_destino in self.transicoes.items():
+            if estado_origem != estado_atual and number != 0:
+                msg += "+"
+                estado_atual = estado_origem
+            if estado_origem == estado_destino:
+                msg += simbolo + "*"
+            else:
+                msg += simbolo
+            number = 1
+            
+        return msg
 
 def ler_entradas_usuario():
     print("---------Conversão AFN para AFD---------------")
