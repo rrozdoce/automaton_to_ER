@@ -34,18 +34,18 @@ class AFN:
 
 
 class AFD:
-    def __init__(self):
-        self.estados = []
-        self.alfabeto = []
-        self.transicoes = {}
-        self.estado_inicial = None
-        self.estados_finais = []
+    def __init__(self, estados=None, alfabeto=None, transicoes=None, estado_inicial=None, estados_finais=None):
+        self.estados = estados or []
+        self.alfabeto = alfabeto or []
+        self.transicoes = transicoes or {}
+        self.estado_inicial = estado_inicial
+        self.estados_finais = estados_finais or []
 
     @classmethod
     def converter_afn_para_afd(cls, afn):
         if afn.eh_deterministico():
             print("O autômato fornecido já é um AFD.")
-            return afn  # Retorna o próprio AFD sem modificações
+            return cls(estados=afn.estados, alfabeto=afn.alfabeto, transicoes=afn.transicoes, estado_inicial=afn.estado_inicial, estados_finais=afn.estados_finais)
 
         afd = cls()
         afd.alfabeto = [simbolo for simbolo in afn.alfabeto if simbolo != '']
@@ -81,6 +81,25 @@ class AFD:
 
         afd.estado_inicial = ''.join(afd_estado_inicial) if afd_estado_inicial else '∅'
         return afd
+    
+    def criar_er(self):
+        msg = ""
+        estado_atual = ""
+        number = 0
+        
+        # método para exibir as transições do AFD
+        print("\nTransições do AFD")
+        for (estado_origem, simbolo), estado_destino in self.transicoes.items():
+            if estado_origem != estado_atual and number != 0:
+                msg += "+"
+                estado_atual = estado_origem
+            if estado_origem == estado_destino:
+                msg += simbolo + "*"
+            else:
+                msg += simbolo
+            number = 1
+            
+        return msg
 
 def ler_entradas_usuario():
     print("---------Conversão AFN/AFNe/AFD---------------")
@@ -110,22 +129,8 @@ afn = ler_entradas_usuario()
 # Verifica se o AFN precisa ser convertido para AFD
 afd = AFD.converter_afn_para_afd(afn)
 
-# Exibindo os resultados
-print("---------Resultado da Conversão---------")
-print("Estados:")
-for estado in afd.estados:
-    print(estado)
+# Criar a expressão regular a partir do AFD
+er = afd.criar_er()
 
-print("\nAlfabeto:")
-print(afd.alfabeto)
-
-print("\nTransições:")
-for transicao, destino in afd.transicoes.items():
-    print(f"D({transicao[0]}, {transicao[1]}): {destino}")
-
-print("\nEstado Inicial:")
-print(afd.estado_inicial)
-
-print("\nEstados Finais:")
-for estado_final in afd.estados_finais:
-    print(estado_final)
+print("\nExpressão Regular gerada:")
+print(er)
