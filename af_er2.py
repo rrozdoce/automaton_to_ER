@@ -22,6 +22,13 @@ class AFN:
                         pilha.append(destino)
 
         return sorted(fechamento)
+    
+    def eh_afd(self):
+        # Verifica se o AFN é um AFD
+        for (estado, simbolo), destinos in self.transicoes.items():
+            if len(destinos) > 1:
+                return False
+        return True
 
 
 class AFD:
@@ -34,15 +41,15 @@ class AFD:
 
     @classmethod
     def converter_afn_para_afd(cls, afn):
-        if afn.epsilon_fechamento([afn.estado_inicial]) == [afn.estado_inicial] and all(len(destinos) <= 1 for (estado, simbolo), destinos in afn.transicoes.items()):
-            print("O autômato fornecido já é um AFD.")
-            afd = cls()
-            afd.estados = afn.estados
-            afd.alfabeto = afn.alfabeto
-            afd.transicoes = afn.transicoes
-            afd.estado_inicial = afn.estado_inicial
-            afd.estados_finais = afn.estados_finais
-            return afd
+        if afn.eh_afd():
+            print("O automato já é um AFD.")
+            return AFD(
+                estados=afn.estados,
+                alfabeto=afn.alfabeto,
+                transicoes=afn.transicoes,
+                estado_inicial=afn.estado_inicial,
+                estados_finais=afn.estados_finais
+            )
                
         afd = cls()
         afd.alfabeto = [simbolo for simbolo in afn.alfabeto if simbolo != '']
@@ -81,23 +88,7 @@ class AFD:
         return afd
     
     def criar_er(self):
-        msg = ""
-        estado_atual = ""
-        number = 0
-        
-        # método para exibir as transições do AFD
-        print("\nTransições do AFD")
-        for (estado_origem, simbolo), estado_destino in self.transicoes.items():
-            if estado_origem != estado_atual and number != 0:
-                msg += "+"
-                estado_atual = estado_origem
-            if estado_origem == estado_destino:
-                msg += simbolo + "*"
-            else:
-                msg += simbolo
-            number = 1
-            
-        return msg
+        ...
 
 def ler_entradas_usuario():
     print("---------Conversão AFN para AFD---------------")
@@ -127,7 +118,11 @@ afn = ler_entradas_usuario()
 afd = AFD.converter_afn_para_afd(afn)
 
 # Geração da expressão regular
-er = afd.criar_er()
+#er = afd.criar_er()
+print(afd.estados)
+print(afd.alfabeto)
+print(afd.estado_inicial)
+print(afd.estados_finais)
 
-print("Expressão regular gerada:")
-print(er)
+for transicoes in afd.transicoes.items():
+    print(transicoes)

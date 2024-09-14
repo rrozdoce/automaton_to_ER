@@ -1,0 +1,52 @@
+---------Conversão AFN para AFD---------------
+Informe os estados (separados por vírgula): q0
+Informe o alfabeto (separados por vírgula): a
+Informe as transições (pressione Enter para nenhuma transição):
+D(q0,a): q0
+D(q0,ε): 
+Informe o estado inicial: q0
+Informe o(s) estado(s) de aceitação (separados por vírgula): q0
+O automato já é um AFD.
+Expressão regular gerada:
+a
+
+--------------------------------------------------------------------------------
+
+---------Conversão AFN para AFD---------------
+Informe os estados (separados por vírgula): q0,q1
+Informe o alfabeto (separados por vírgula): u,v,w
+Informe as transições (pressione Enter para nenhuma transição):
+D(q0,u): q0
+D(q0,v): q1
+D(q0,w): 
+D(q0,ε): 
+D(q1,u): 
+D(q1,v): 
+D(q1,w): q1
+D(q1,ε): 
+Informe o estado inicial: q0
+Informe o(s) estado(s) de aceitação (separados por vírgula): q1
+O automato já é um AFD.
+Expressão regular gerada:
+uvw+uvw
+
+--------------------------------------------------------------------------------
+---------Conversão AFN para AFD---------------
+Informe os estados (separados por vírgula): q0,q1
+Informe o alfabeto (separados por vírgula): x,u,v,w
+Informe as transições (pressione Enter para nenhuma transição):
+D(q0,x): 
+D(q0,u): q0
+D(q0,v): q1
+D(q0,w): 
+D(q0,ε): 
+D(q1,x): q0
+D(q1,u): 
+D(q1,v): 
+D(q1,w): q1
+D(q1,ε): 
+Informe o estado inicial: q0
+Informe o(s) estado(s) de aceitação (separados por vírgula): q1
+O automato já é um AFD.
+Expressão regular gerada:
+xuvw+xuvw
