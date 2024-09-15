@@ -46,7 +46,7 @@ class AFD:
     @classmethod
     def converter_afn_para_afd(cls, afn):
         if afn.eh_afd():
-            print("O automato já é um AFD.")
+            #print("O automato já é um AFD.")
             return AFD(
                 estados=afn.estados,
                 alfabeto=afn.alfabeto,
@@ -126,6 +126,7 @@ def converter_transicoes(transicoes):
     return transicoes_convertidas
 
 def readDFA(states, alphabet, transitions, start_state, final_states):
+    
     
     # Cria o DFA
     DFA = {
@@ -278,11 +279,11 @@ def convertToRegex(DFA):
             
         DFA['transition_function'] = newTrans
     
-    regEx = {}
-    regEx['regex'] = DFA['transition_function'][0][1]
-    
-    print("Expressão regular resultante:")
-    print(json.dumps(regEx, indent=4))
+    # Retorna apenas a expressão regular
+    if DFA['transition_function']:
+        return DFA['transition_function'][0][1]
+    else:
+        return ""
 
 # Leitura das entradas do usuário
 afn = ler_entradas_usuario()
@@ -296,4 +297,6 @@ transicoes = converter_transicoes(afd.transicoes)
 
 novo_afd = readDFA(afd.estados, afd.alfabeto, transicoes, afd.estado_inicial, afd.estados_finais)
 
-convertToRegex(novo_afd)
+er = convertToRegex(novo_afd)
+
+print(f"expressão regular: {er}")
