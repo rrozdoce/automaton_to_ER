@@ -91,49 +91,53 @@ class AFD:
         ...
     
     def criar_er(self):
-        estados = self.estados.copy
+        estados = self.estados.copy()  # Corrigido o uso de .copy()
         alfabeto = self.alfabeto.copy()
-        estado_inicial = self.estado_inicial.copy()
+        estado_inicial = self.estado_inicial
         estados_finais = self.estados_finais.copy()
         transicoes = self.transicoes.copy()
+    
         estado_start = 'qs'
         estado_accept = 'qa'
-        
+    
         estados.append(estado_start)
         estados.append(estado_accept)
-        
+    
+        # Liga o estado start com o estado inicial
         transicoes[(estado_start, '')] = [estado_inicial]
-        
-        for estado in estados:
-            if estado in estados_finais:
-                transicoes[(estado, '')] = estado_accept
-            else:
-                for simbolo in alfabeto: 
-                    if transicoes[(estado, simbolo)] in estados_finais:
-                        transicoes[(estado, '')] = estado_accept
-        
-        #
+    
+        # Liga os estados finais com o estado de aceitação
+    
+        for estado in estados_finais:
+            transicoes[(estado, '')] = estado_accept
+        # Construção da expressão regular
         expressao_regular = {}
         string_aux = ''
         novo_alfabeto = alfabeto.copy()
-        
+    
         for estado in estados:
-          if estado != estado_start:  
-            for simbolo in novo_alfabeto:
-                if(transicoes[(estado_start, simbolo)] == estado):
-                    quantidade_estado = sum(1 for chave in transicoes if chave.startswith(estado))
+            if estado != estado_start:
+                for simbolo in novo_alfabeto:
+                    if transicoes.get((estado_start, simbolo)) == estado:
+                        quantidade_estado = sum(1 for chave in transicoes if chave[0] == estado)
                     
-                    #
-                    if quantidade_estado > 1:
-                        for simbolo_i in novo_alfabeto:
-                            if transicoes[(estado, simbolo_i)] != estado:
-                                transicoes[(estado_start, simbolo_i)] = transicoes[(estado, simbolo_i)]
-                            if transicoes[(estado, simbolo_i)] == estado:
-                                transicoes[(estado_start, (simbolo_i + "*"))] = transicoes[(estado, simbolo_i)]
-                                novo_alfabeto.append(simbolo_i + "*")
-                                
-                    # deleta a transicao
-                    del transicoes[estado, simbolo]
+                        # Caso existam várias transições do estado
+                        if quantidade_estado > 1:
+                            for simbolo_i in novo_alfabeto:
+                                transicao_atual = transicoes.get((estado, simbolo_i))
+                                if transicao_atual and transicao_atual != estado:
+                                    transicoes[(estado_start, simbolo_i)] = transicao_atual
+                                elif transicao_atual == estado:
+                                    transicoes[(estado_start, simbolo_i + "*")] = transicao_atual
+                                    novo_alfabeto.append(simbolo_i + "*")
+                    
+                        # Deleta a transição antiga
+                        transicoes.pop((estado, simbolo), None)
+
+        # Aqui você pode finalizar a construção da expressão regular
+        # Usando `expressao_regular` para armazenar os resultados.
+        return expressao_regular  # Retorna a expressão regular final
+
 
 def ler_entradas_usuario():
     print("---------Conversão AFN para AFD---------------")
