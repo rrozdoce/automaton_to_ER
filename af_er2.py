@@ -87,8 +87,53 @@ class AFD:
         afd.estado_inicial = ''.join(afd_estado_inicial) if afd_estado_inicial else ''
         return afd
     
-    def criar_er(self):
+    def remover_estado(transicoes, alfabeto ,estado_remover):
         ...
+    
+    def criar_er(self):
+        estados = self.estados.copy
+        alfabeto = self.alfabeto.copy()
+        estado_inicial = self.estado_inicial.copy()
+        estados_finais = self.estados_finais.copy()
+        transicoes = self.transicoes.copy()
+        estado_start = 'qs'
+        estado_accept = 'qa'
+        
+        estados.append(estado_start)
+        estados.append(estado_accept)
+        
+        transicoes[(estado_start, '')] = [estado_inicial]
+        
+        for estado in estados:
+            if estado in estados_finais:
+                transicoes[(estado, '')] = estado_accept
+            else:
+                for simbolo in alfabeto: 
+                    if transicoes[(estado, simbolo)] in estados_finais:
+                        transicoes[(estado, '')] = estado_accept
+        
+        #
+        expressao_regular = {}
+        string_aux = ''
+        novo_alfabeto = alfabeto.copy()
+        
+        for estado in estados:
+          if estado != estado_start:  
+            for simbolo in novo_alfabeto:
+                if(transicoes[(estado_start, simbolo)] == estado):
+                    quantidade_estado = sum(1 for chave in transicoes if chave.startswith(estado))
+                    
+                    #
+                    if quantidade_estado > 1:
+                        for simbolo_i in novo_alfabeto:
+                            if transicoes[(estado, simbolo_i)] != estado:
+                                transicoes[(estado_start, simbolo_i)] = transicoes[(estado, simbolo_i)]
+                            if transicoes[(estado, simbolo_i)] == estado:
+                                transicoes[(estado_start, (simbolo_i + "*"))] = transicoes[(estado, simbolo_i)]
+                                novo_alfabeto.append(simbolo_i + "*")
+                                
+                    # deleta a transicao
+                    del transicoes[estado, simbolo]
 
 def ler_entradas_usuario():
     print("---------Conversão AFN para AFD---------------")
