@@ -125,122 +125,120 @@ def converter_transicoes(transicoes):
     
     return transicoes_convertidas
 
-def readDFA(states, alphabet, transitions, start_state, final_states):
-    
-    
-    # Cria o DFA
-    DFA = {
-        'states': states,
-        'alphabet': alphabet,
-        'transition_function': transitions,
-        'start_states': [start_state],
-        'final_states': final_states
+def lerAFD(estados, alfabeto, transicoes, estado_inicial, estados_finais):
+    # Cria o AFD
+    AFD = {
+        'estados': estados,
+        'alfabeto': alfabeto,
+        'funcao_transicao': transicoes,
+        'estados_iniciais': [estado_inicial],
+        'estados_finais': estados_finais
     }
     
-    return DFA
+    return AFD
 
-def convertToRegex(DFA):
+def converterParaER(AFD):
     i = "q0"
     c = 0
-    while i in DFA['states']:
+    while i in AFD['estados']:
         c += 1
         i = "q"+str(c)
 
-    DFA['states'].append(i)
-    DFA['transition_function'].append([i, "$", DFA['start_states'][0]])
-    DFA['start_states'] = [i]
+    AFD['estados'].append(i)
+    AFD['funcao_transicao'].append([i, "$", AFD['estados_iniciais'][0]])
+    AFD['estados_iniciais'] = [i]
 
     i = "q0"
     c = 0
-    while i in DFA['states']:
+    while i in AFD['estados']:
         c += 1
         i = "q"+str(c)
 
-    DFA['states'].append(i)
-    for state in DFA['final_states']:
-        DFA['transition_function'].append([state, "$", i])
-    DFA['final_states'] = [i]
+    AFD['estados'].append(i)
+    for estado in AFD['estados_finais']:
+        AFD['funcao_transicao'].append([estado, "$", i])
+    AFD['estados_finais'] = [i]
     
-    transitions = {}
-    for trans in DFA['transition_function']:
+    transicoes = {}
+    for trans in AFD['funcao_transicao']:
         if len(trans) != 3:
             print(f"Transição inválida: {trans}. Esperado formato [estado, simbolo, estado].")
             continue
-        if trans[0] not in transitions.keys():
-            transitions[trans[0]] = {}
-        transitions[trans[0]][trans[1]] = trans[2]
+        if trans[0] not in transicoes.keys():
+            transicoes[trans[0]] = {}
+        transicoes[trans[0]][trans[1]] = trans[2]
     
-    for state in transitions.keys():
-        toChange = []
-        for alph1 in transitions[state].keys():
-            for alph2 in transitions[state].keys():
-                if alph1 != alph2 and transitions[state][alph1] == transitions[state][alph2]:
-                    dest = transitions[state][alph1]
-                    toChange.append([alph1, dest, 0])
-                    toChange.append([alph2, dest, 0])
+    for estado in transicoes.keys():
+        aAlterar = []
+        for alfabeto1 in transicoes[estado].keys():
+            for alfabeto2 in transicoes[estado].keys():
+                if alfabeto1 != alfabeto2 and transicoes[estado][alfabeto1] == transicoes[estado][alfabeto2]:
+                    destino = transicoes[estado][alfabeto1]
+                    aAlterar.append([alfabeto1, destino, 0])
+                    aAlterar.append([alfabeto2, destino, 0])
     
-        toChange = [list(x) for x in set(tuple(x) for x in toChange)]
+        aAlterar = [list(x) for x in set(tuple(x) for x in aAlterar)]
     
         flag = True
         while flag:
             flag = False
-            for exp1 in toChange:
-                for exp2 in toChange:
+            for exp1 in aAlterar:
+                for exp2 in aAlterar:
                     if exp1[0] != exp2[0] and exp1[1] == exp2[1]:
                         if exp1[2] == 0:
                             exp1[0] += "+"+exp2[0]
                             exp1[2] = 1
                             exp2[2] = 1
-                            toChange.remove(exp2)
+                            aAlterar.remove(exp2)
                             flag = True
                         elif exp2[2] == 0:
                             exp1[0] += "+"+exp2[0]
                             exp1[2] = 1
                             exp2[2] = 1
-                            toChange.remove(exp2)
+                            aAlterar.remove(exp2)
                             flag = True
-        toDel = []
-        for key in transitions[state].keys():
-            for trans in toChange:
-                if key in trans[0]:
-                    toDel.append(key)
-        for key in toDel:
-            del transitions[state][key]
+        aExcluir = []
+        for chave in transicoes[estado].keys():
+            for trans in aAlterar:
+                if chave in trans[0]:
+                    aExcluir.append(chave)
+        for chave in aExcluir:
+            del transicoes[estado][chave]
               
-        for trans in toChange:
-            transitions[state][trans[0]] = trans[1]
+        for trans in aAlterar:
+            transicoes[estado][trans[0]] = trans[1]
         
-    DFA['transition_function'] = []
-    for state in transitions.keys():
-        for alph in transitions[state].keys():
-            DFA['transition_function'].append([state, alph, transitions[state][alph]])
+    AFD['funcao_transicao'] = []
+    for estado in transicoes.keys():
+        for alfabeto in transicoes[estado].keys():
+            AFD['funcao_transicao'].append([estado, alfabeto, transicoes[estado][alfabeto]])
     
-    while len(DFA['states']) > 2:
-        newTrans = copy.deepcopy(DFA['transition_function'])
+    while len(AFD['estados']) > 2:
+        novasTransicoes = copy.deepcopy(AFD['funcao_transicao'])
         
-        rip_state = ""
-        for state in DFA['states']:
-            if state not in DFA['start_states'] and state not in DFA['final_states']:
-                rip_state = state
+        estadoEliminar = ""
+        for estado in AFD['estados']:
+            if estado not in AFD['estados_iniciais'] and estado not in AFD['estados_finais']:
+                estadoEliminar = estado
                 break
-        for state1 in DFA['states']:
-            for state2 in DFA['states']:
-                if state1 in DFA['final_states']:
+        for estado1 in AFD['estados']:
+            for estado2 in AFD['estados']:
+                if estado1 in AFD['estados_finais']:
                     continue
-                if state2 in DFA['start_states']:
+                if estado2 in AFD['estados_iniciais']:
                     continue
                 R1 = ""
                 R2 = ""
                 R3 = ""
                 R4 = ""
-                for trans in DFA['transition_function']:
-                    if trans[0] == state1 and trans[2] == rip_state:
+                for trans in AFD['funcao_transicao']:
+                    if trans[0] == estado1 and trans[2] == estadoEliminar:
                         R1 = trans[1]
-                    if trans[0] == rip_state and trans[2] == rip_state:
+                    if trans[0] == estadoEliminar and trans[2] == estadoEliminar:
                         R2 = trans[1]
-                    if trans[0] == rip_state and trans[2] == state2:
+                    if trans[0] == estadoEliminar and trans[2] == estado2:
                         R3 = trans[1]
-                    if trans[0] == state1 and trans[2] == state2:
+                    if trans[0] == estado1 and trans[2] == estado2:
                         R4 = trans[1]
                 
                 
@@ -260,28 +258,28 @@ def convertToRegex(DFA):
                 if R and R != "$" and len(R) > 1:
                     R = "("+R+")"
                 
-                added = False    
-                for trans in newTrans:
-                    if state1 == trans[0] and state2 == trans[2]:
+                adicionado = False    
+                for trans in novasTransicoes:
+                    if estado1 == trans[0] and estado2 == trans[2]:
                         trans[1] = R
-                        added = True
-                if not added and R:
-                    newTrans.append([state1, R, state2])
+                        adicionado = True
+                if not adicionado and R:
+                    novasTransicoes.append([estado1, R, estado2])
             
             
-        DFA['states'].remove(rip_state)
-        toDel = []
-        for trans in newTrans:
-            if trans[0] == rip_state or trans[2] == rip_state:
-                toDel.append(trans)
-        for trans in toDel:
-            newTrans.remove(trans)
+        AFD['estados'].remove(estadoEliminar)
+        aExcluir = []
+        for trans in novasTransicoes:
+            if trans[0] == estadoEliminar or trans[2] == estadoEliminar:
+                aExcluir.append(trans)
+        for trans in aExcluir:
+            novasTransicoes.remove(trans)
             
-        DFA['transition_function'] = newTrans
+        AFD['funcao_transicao'] = novasTransicoes
     
     # Retorna apenas a expressão regular
-    if DFA['transition_function']:
-        return DFA['transition_function'][0][1]
+    if AFD['funcao_transicao']:
+        return AFD['funcao_transicao'][0][1]
     else:
         return ""
 
@@ -295,8 +293,8 @@ afd = AFD.converter_afn_para_afd(afn)
 
 transicoes = converter_transicoes(afd.transicoes)
 
-novo_afd = readDFA(afd.estados, afd.alfabeto, transicoes, afd.estado_inicial, afd.estados_finais)
+novo_afd = lerAFD(afd.estados, afd.alfabeto, transicoes, afd.estado_inicial, afd.estados_finais)
 
-er = convertToRegex(novo_afd)
+er = converterParaER(novo_afd)
 
 print(f"expressão regular: {er}")
