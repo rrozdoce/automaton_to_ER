@@ -1,141 +1,57 @@
-class AFN:
-    def __init__(self, estados, alfabeto, transicoes, estado_inicial, estados_finais):
+class AutomatoFinito:
+    def __init__(self, estados, transicoes, estado_inicial, estados_finais):
         self.estados = estados
-        self.alfabeto = alfabeto
-        self.transicoes = transicoes
+        self.transicoes = transicoes  # dict {(estado1, simbolo): [estados]}
         self.estado_inicial = estado_inicial
         self.estados_finais = estados_finais
 
-    def epsilon_fechamento(self, estados):
-        pilha = list(estados)
-        fechamento = set(estados)
-
-        while pilha:
-            estado = pilha.pop()
-
-            if (estado, '') in self.transicoes:
-                destinos = self.transicoes[(estado, '')]
-
-                for destino in destinos:
-                    if destino not in fechamento:
-                        fechamento.add(destino)
-                        pilha.append(destino)
-
-        return sorted(fechamento)
-    
-    def eh_afd(self):
-        # Verifica se o AFN é um AFD
-        for (estado, simbolo), destinos in self.transicoes.items():
-            if len(destinos) > 1:
-                return False
-        return True
-
-
-class AFD:
-    def __init__(self, estados=None, alfabeto=None, transicoes=None, estado_inicial=None, estados_finais=None):
-        self.estados = estados if estados is not None else []
-        self.alfabeto = alfabeto if alfabeto is not None else []
-        self.transicoes = transicoes if transicoes is not None else {}
-        self.estado_inicial = estado_inicial
-        self.estados_finais = estados_finais if estados_finais is not None else []
-
-    @classmethod
-    def converter_afn_para_afd(cls, afn):
-        if afn.eh_afd():
-            print("O automato já é um AFD.")
-            return AFD(
-                estados=afn.estados,
-                alfabeto=afn.alfabeto,
-                transicoes=afn.transicoes,
-                estado_inicial=afn.estado_inicial,
-                estados_finais=afn.estados_finais
-            )
-               
-        afd = cls()
-        afd.alfabeto = [simbolo for simbolo in afn.alfabeto if simbolo != '']
-        afd_estado_inicial = afn.epsilon_fechamento([afn.estado_inicial])
-
-        pilha = [afd_estado_inicial]
-        visitados = set()
-
-        while pilha:
-            conjunto = pilha.pop()
-            conjunto_str = ''.join(conjunto) if conjunto else ''
-            if conjunto_str in visitados:
-                continue
-            visitados.add(conjunto_str)
-            afd.estados.append(conjunto_str)
-
-            if any(estado in afn.estados_finais for estado in conjunto):
-                afd.estados_finais.append(conjunto_str)
-
-            for simbolo in afd.alfabeto:
-                destinos = []
-
-                for estado in conjunto:
-                    if (estado, simbolo) in afn.transicoes:
-                        destinos.extend(afn.transicoes[(estado, simbolo)])
-
-                epsilon_destinos = afn.epsilon_fechamento(destinos)
-                destino_str = ''.join(epsilon_destinos) if epsilon_destinos else ''
-
-                afd.transicoes[(conjunto_str, simbolo)] = destino_str
-
-                if destino_str and destino_str not in visitados:
-                    pilha.append(epsilon_destinos)
-
-        afd.estado_inicial = ''.join(afd_estado_inicial) if afd_estado_inicial else ''
-        return afd
-    
-    def criar_er(self):
-        # Inicializando a variável que irá armazenar a ER
-        er = ""
-        estado_atual = None
+    def remover_estado(self, estado_remover):
+        novos_arcos = {}
         
-        # Percorrer todas as transições do AFD
-        for (estado_origem, simbolo), estado_destino in self.transicoes.items():
-            if estado_origem == estado_destino:
-                # Loop (usando fechamento de Kleene para loops)
-                er += f"{simbolo}*"
-            else:
-                # Transição normal
-                if estado_atual != estado_origem:
-                    if estado_atual is not None:
-                        er += "+"
-                    estado_atual = estado_origem
-                er += f"{simbolo}"
-        
-        return er
+        # Para todos os pares de estados (j, k), lidando com os caminhos indiretos por i
+        for (j, i), w_ji in self.transicoes.items():
+            if i == estado_remover:
+                for (i2, k), w_ik in self.transicoes.items():
+                    if i2 == estado_remover:
+                        # Caso 1 e Caso 2, adicionando arco direto entre j e k
+                        if (j, k) not in novos_arcos:
+                            novos_arcos[(j, k)] = f"{' + '.join(w_ji)}({i})*{' + '.join(w_ik)}"
+                        else:
+                            novos_arcos[(j, k)] += f" + {' + '.join(w_ji)}({i})*{' + '.join(w_ik)}"
 
-def ler_entradas_usuario():
-    print("---------Conversão AFN para AFD---------------")
-    estados = input("Informe os estados (separados por vírgula): ").split(",")
-    alfabeto = input("Informe o alfabeto (separados por vírgula): ").split(",")
-    alfabeto.append('')  # Adicionando o símbolo vazio ao alfabeto
-    transicoes = {}
+        # Remove todos os arcos incidentes ao nó removido
+        self.transicoes = {key: value for key, value in self.transicoes.items() if estado_remover not in key}
 
-    print("Informe as transições (pressione Enter para nenhuma transição):")
-    for estado in estados:
-        for simbolo in alfabeto:
-            entrada = input(f"D({estado},{'ε' if simbolo == '' else simbolo}): ").strip()
-            if entrada == '':
-                transicoes[(estado, simbolo)] = []
-            else:
-                transicoes[(estado, simbolo)] = entrada.split(",")
+        # Adiciona os novos arcos gerados
+        self.transicoes.update(novos_arcos)
 
-    estado_inicial = input("Informe o estado inicial: ").strip()
-    estados_de_aceitacao = input("Informe o(s) estado(s) de aceitação (separados por vírgula): ").split(",")
+    def obter_ER(self):
+        estados_remover = [e for e in self.estados if e != self.estado_inicial and e not in self.estados_finais]
 
-    return AFN(estados, alfabeto, transicoes, estado_inicial, estados_de_aceitacao)
+        # Remova um estado por vez, até que reste apenas o inicial e final
+        for estado in estados_remover:
+            self.remover_estado(estado)
 
-# Leitura das entradas do usuário
-afn = ler_entradas_usuario()
+        # A expressão regular final será o rótulo do arco entre o estado inicial e o estado final
+        if (self.estado_inicial, self.estados_finais[0]) in self.transicoes:
+            return self.transicoes[(self.estado_inicial, self.estados_finais[0])]
+        else:
+            return "Nenhuma transição direta encontrada."
 
-# Chamada da função para converter o AFN em AFD
-afd = AFD.converter_afn_para_afd(afn)
+# Exemplo de uso
 
-# Geração da expressão regular
-er = afd.criar_er()
+# Definindo os estados, transições e estados finais
+estados = [1, 2, 3]
+transicoes = {
+    (1, 2): "a",
+    (2, 3): "b",
+    (1, 3): "c"
+}
+estado_inicial = 1
+estados_finais = [3]
 
-print("Expressão regular gerada:")
-print(er)
+af = AutomatoFinito(estados, transicoes, estado_inicial, estados_finais)
+
+# Obtendo a ER
+expressao_regular = af.obter_ER()
+print(f"Expressão Regular: {expressao_regular}")
