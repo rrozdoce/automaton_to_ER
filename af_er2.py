@@ -90,7 +90,6 @@ class AFD:
         return afd
 
 def ler_entradas_usuario():
-    print("---------Conversão AFN para AFD---------------")
     estados = input("Informe os estados (separados por vírgula): ").split(",")
     alfabeto = input("Informe o alfabeto (separados por vírgula): ").split(",")
     alfabeto.append('')  # Adicionando o símbolo vazio ao alfabeto
