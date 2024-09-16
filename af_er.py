@@ -39,6 +39,7 @@ class AFN:
 
         return sorted(fechamento)
     
+    # verifica se o aumato ja é um afd
     def eh_afd(self):
         # Verifica se o AFN é um AFD
         for (estado, simbolo), destinos in self.transicoes.items():
@@ -57,7 +58,6 @@ class AFD:
     @classmethod
     def converter_afn_para_afd(cls, afn):
         if afn.eh_afd():
-            #print("O automato já é um AFD.")
             return AFD(
                 estados=afn.estados,
                 alfabeto=afn.alfabeto,
@@ -299,10 +299,13 @@ afn = ler_entradas_usuario()
 # Chamada da função para converter o AFN em AFD
 afd = AFD.converter_afn_para_afd(afn)
 
+# tirar os transicoes vazias
 transicoes = converter_transicoes(afd.transicoes)
 
+# le o afd para o tipo da conversão para a expressão
 novo_afd = lerAFD(afd.estados, afd.alfabeto, transicoes, afd.estado_inicial, afd.estados_finais)
 
+# converter afd para expressão regular
 er = converterParaER(novo_afd)
 
 print(f"expressão regular: {er}")
