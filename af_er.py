@@ -31,8 +31,7 @@ class AFN:
             if len(destinos) > 1:
                 return False
         return True
-
-
+    
 class AFD:
     def __init__(self, estados=None, alfabeto=None, transicoes=None, estado_inicial=None, estados_finais=None):
         self.estados = estados if estados is not None else []
@@ -285,8 +284,6 @@ afn = ler_entradas_usuario()
 
 # Chamada da função para converter o AFN em AFD
 afd = AFD.converter_afn_para_afd(afn)
-
-#readDFA(states, alphabet, transitions, start_state, final_states)
 
 transicoes = converter_transicoes(afd.transicoes)
 
