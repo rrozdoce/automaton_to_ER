@@ -1,0 +1,18 @@
+Informe os estados (separados por vírgula): q0,q1,q2
+Informe o alfabeto (separados por vírgula): a,b,c
+Informe as transições (pressione Enter para nenhuma transição):
+D(q0,a): q1,q2
+D(q0,b): 
+D(q0,c): 
+D(q0,ε): 
+D(q1,a): 
+D(q1,b): q1,q2
+D(q1,c): 
+D(q1,ε): 
+D(q2,a): 
+D(q2,b): 
+D(q2,c): q2
+D(q2,ε):
+Informe o estado inicial: q0
+Informe o(s) estado(s) de aceitação (separados por vírgula): q1,q2
+expressão regular: ((ab*c)c*+(ab*))
