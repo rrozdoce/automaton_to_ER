@@ -1,3 +1,17 @@
+"""
+implementar(python)
+AF => ER
+
+Entrada: AF(AFN ou AFD ou AFNe)
+Saida: ER
+Data: 16/09/2024
+Em duplas
+
+ALUNOS:
+Felipe Echeverria Vilhalva RGM: 45611
+Bruno Henrique Tuneca Estigarribia RGM: 43555
+"""
+
 import copy
 
 class AFN:
