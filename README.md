@@ -1,6 +1,4 @@
 implementar(python)
 AF => ER
 
-Entrada: AF(AFN ou AFD ou AFNe)
-Saida: ER
-Data: 16/09/2024
+OBSERVATION: I used a part of the code as a reference in an article by a github user, if anyone knows the name let me know so I can give due credit

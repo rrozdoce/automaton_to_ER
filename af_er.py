@@ -1,256 +1,241 @@
-"""
-implementar(python)
-AF => ER
-
-Entrada: AF(AFN ou AFD ou AFNe)
-Saida: ER
-Data: 16/09/2024
-Em duplas
-
-ALUNOS:
-Felipe Echeverria Vilhalva RGM: 45611
-Bruno Henrique Tuneca Estigarribia RGM: 43555
-"""
-
 import copy
 
-class AFN:
-    def __init__(self, estados, alfabeto, transicoes, estado_inicial, estados_finais):
-        self.estados = estados
-        self.alfabeto = alfabeto
-        self.transicoes = transicoes
-        self.estado_inicial = estado_inicial
-        self.estados_finais = estados_finais
+class NFA:
+    def __init__(self, states, alphabet, transitions, initial_state, final_states):
+        self.states = states
+        self.alphabet = alphabet
+        self.transitions = transitions
+        self.initial_state = initial_state
+        self.final_states = final_states
 
-    def epsilon_fechamento(self, estados):
-        pilha = list(estados)
-        fechamento = set(estados)
+    def epsilon_closure(self, states):
+        stack = list(states)
+        closure = set(states)
 
-        while pilha:
-            estado = pilha.pop()
+        while stack:
+            state = stack.pop()
 
-            if (estado, '') in self.transicoes:
-                destinos = self.transicoes[(estado, '')]
+            if (state, '') in self.transitions:
+                destinations = self.transitions[(state, '')]
 
-                for destino in destinos:
-                    if destino not in fechamento:
-                        fechamento.add(destino)
-                        pilha.append(destino)
+                for destination in destinations:
+                    if destination not in closure:
+                        closure.add(destination)
+                        stack.append(destination)
 
-        return sorted(fechamento)
+        return sorted(closure)
     
-    # verifica se o aumato ja é um afd
-    def eh_afd(self):
-        # Verifica se o AFN é um AFD
-        for (estado, simbolo), destinos in self.transicoes.items():
-            if len(destinos) > 1:
+    # Check if the automaton is already a DFA
+    def is_dfa(self):
+        # Checks if the NFA is a DFA
+        for (state, symbol), destinations in self.transitions.items():
+            if len(destinations) > 1:
                 return False
         return True
     
-class AFD:
-    def __init__(self, estados=None, alfabeto=None, transicoes=None, estado_inicial=None, estados_finais=None):
-        self.estados = estados if estados is not None else []
-        self.alfabeto = alfabeto if alfabeto is not None else []
-        self.transicoes = transicoes if transicoes is not None else {}
-        self.estado_inicial = estado_inicial
-        self.estados_finais = estados_finais if estados_finais is not None else []
+class DFA:
+    def __init__(self, states=None, alphabet=None, transitions=None, initial_state=None, final_states=None):
+        self.states = states if states is not None else []
+        self.alphabet = alphabet if alphabet is not None else []
+        self.transitions = transitions if transitions is not None else {}
+        self.initial_state = initial_state
+        self.final_states = final_states if final_states is not None else []
 
     @classmethod
-    def converter_afn_para_afd(cls, afn):
-        if afn.eh_afd():
-            return AFD(
-                estados=afn.estados,
-                alfabeto=afn.alfabeto,
-                transicoes=afn.transicoes,
-                estado_inicial=afn.estado_inicial,
-                estados_finais=afn.estados_finais
+    def convert_nfa_to_dfa(cls, nfa):
+        if nfa.is_dfa():
+            return DFA(
+                states=nfa.states,
+                alphabet=nfa.alphabet,
+                transitions=nfa.transitions,
+                initial_state=nfa.initial_state,
+                final_states=nfa.final_states
             )
                
-        afd = cls()
-        afd.alfabeto = [simbolo for simbolo in afn.alfabeto if simbolo != '']
-        afd_estado_inicial = afn.epsilon_fechamento([afn.estado_inicial])
+        dfa = cls()
+        dfa.alphabet = [symbol for symbol in nfa.alphabet if symbol != '']
+        dfa_initial_state = nfa.epsilon_closure([nfa.initial_state])
 
-        pilha = [afd_estado_inicial]
-        visitados = set()
+        stack = [dfa_initial_state]
+        visited = set()
 
-        while pilha:
-            conjunto = pilha.pop()
-            conjunto_str = ''.join(conjunto) if conjunto else ''
-            if conjunto_str in visitados:
+        while stack:
+            state_set = stack.pop()
+            state_set_str = ''.join(state_set) if state_set else ''
+            if state_set_str in visited:
                 continue
-            visitados.add(conjunto_str)
-            afd.estados.append(conjunto_str)
+            visited.add(state_set_str)
+            dfa.states.append(state_set_str)
 
-            if any(estado in afn.estados_finais for estado in conjunto):
-                afd.estados_finais.append(conjunto_str)
+            if any(state in nfa.final_states for state in state_set):
+                dfa.final_states.append(state_set_str)
 
-            for simbolo in afd.alfabeto:
-                destinos = []
+            for symbol in dfa.alphabet:
+                destinations = []
 
-                for estado in conjunto:
-                    if (estado, simbolo) in afn.transicoes:
-                        destinos.extend(afn.transicoes[(estado, simbolo)])
+                for state in state_set:
+                    if (state, symbol) in nfa.transitions:
+                        destinations.extend(nfa.transitions[(state, symbol)])
 
-                epsilon_destinos = afn.epsilon_fechamento(destinos)
-                destino_str = ''.join(epsilon_destinos) if epsilon_destinos else ''
+                epsilon_destinations = nfa.epsilon_closure(destinations)
+                destination_str = ''.join(epsilon_destinations) if epsilon_destinations else ''
 
-                afd.transicoes[(conjunto_str, simbolo)] = destino_str
+                dfa.transitions[(state_set_str, symbol)] = destination_str
 
-                if destino_str and destino_str not in visitados:
-                    pilha.append(epsilon_destinos)
+                if destination_str and destination_str not in visited:
+                    stack.append(epsilon_destinations)
 
-        afd.estado_inicial = ''.join(afd_estado_inicial) if afd_estado_inicial else ''
-        return afd
+        dfa.initial_state = ''.join(dfa_initial_state) if dfa_initial_state else ''
+        return dfa
 
-def ler_entradas_usuario():
-    estados = input("Informe os estados (separados por vírgula): ").split(",")
-    alfabeto = input("Informe o alfabeto (separados por vírgula): ").split(",")
-    alfabeto.append('')  # Adicionando o símbolo vazio ao alfabeto
-    transicoes = {}
+def read_user_input():
+    states = input("Enter the states (separated by commas): ").split(",")
+    alphabet = input("Enter the alphabet (separated by commas): ").split(",")
+    alphabet.append('')  # Add the empty symbol to the alphabet
+    transitions = {}
 
-    print("Informe as transições (pressione Enter para nenhuma transição):")
-    for estado in estados:
-        for simbolo in alfabeto:
-            entrada = input(f"D({estado},{'ε' if simbolo == '' else simbolo}): ").strip()
-            if entrada == '':
-                transicoes[(estado, simbolo)] = []
+    print("Enter the transitions (press Enter for no transition):")
+    for state in states:
+        for symbol in alphabet:
+            entry = input(f"D({state},{'ε' if symbol == '' else symbol}): ").strip()
+            if entry == '':
+                transitions[(state, symbol)] = []
             else:
-                transicoes[(estado, simbolo)] = entrada.split(",")
+                transitions[(state, symbol)] = entry.split(",")
 
-    estado_inicial = input("Informe o estado inicial: ").strip()
-    estados_de_aceitacao = input("Informe o(s) estado(s) de aceitação (separados por vírgula): ").split(",")
+    initial_state = input("Enter the initial state: ").strip()
+    acceptance_states = input("Enter the acceptance state(s) (separated by commas): ").split(",")
 
-    return AFN(estados, alfabeto, transicoes, estado_inicial, estados_de_aceitacao)
+    return NFA(states, alphabet, transitions, initial_state, acceptance_states)
 
-def converter_transicoes(transicoes):
-    transicoes_convertidas = []
+def convert_transitions(transitions):
+    converted_transitions = []
     
-    for (estado, simbolo), destino in transicoes.items():
-        if destino:  # Verifica se o destino não está vazio
-            if isinstance(destino, list):  # Se os destinos forem uma lista
-                for d in destino:
-                    transicoes_convertidas.append([estado, simbolo, d])
-            else:  # Se o destino for uma string única
-                transicoes_convertidas.append([estado, simbolo, destino])
+    for (state, symbol), destination in transitions.items():
+        if destination:  # Check if the destination is not empty
+            if isinstance(destination, list):  # If destinations are a list
+                for d in destination:
+                    converted_transitions.append([state, symbol, d])
+            else:  # If destination is a single string
+                converted_transitions.append([state, symbol, destination])
     
-    return transicoes_convertidas
+    return converted_transitions
 
-def lerAFD(estados, alfabeto, transicoes, estado_inicial, estados_finais):
-    # Cria o AFD
-    AFD = {
-        'estados': estados,
-        'alfabeto': alfabeto,
-        'funcao_transicao': transicoes,
-        'estados_iniciais': [estado_inicial],
-        'estados_finais': estados_finais
+def read_DFA(states, alphabet, transitions, initial_state, final_states):
+    # Create the DFA
+    DFA = {
+        'states': states,
+        'alphabet': alphabet,
+        'transition_function': transitions,
+        'initial_states': [initial_state],
+        'final_states': final_states
     }
     
-    return AFD
+    return DFA
 
-def converterParaER(AFD):
+def convert_to_ER(DFA):
     i = "q0"
     c = 0
-    while i in AFD['estados']:
+    while i in DFA['states']:
         c += 1
         i = "q"+str(c)
 
-    AFD['estados'].append(i)
-    AFD['funcao_transicao'].append([i, "$", AFD['estados_iniciais'][0]])
-    AFD['estados_iniciais'] = [i]
+    DFA['states'].append(i)
+    DFA['transition_function'].append([i, "$", DFA['initial_states'][0]])
+    DFA['initial_states'] = [i]
 
     i = "q0"
     c = 0
-    while i in AFD['estados']:
+    while i in DFA['states']:
         c += 1
         i = "q"+str(c)
 
-    AFD['estados'].append(i)
-    for estado in AFD['estados_finais']:
-        AFD['funcao_transicao'].append([estado, "$", i])
-    AFD['estados_finais'] = [i]
+    DFA['states'].append(i)
+    for state in DFA['final_states']:
+        DFA['transition_function'].append([state, "$", i])
+    DFA['final_states'] = [i]
     
-    transicoes = {}
-    for trans in AFD['funcao_transicao']:
+    transitions = {}
+    for trans in DFA['transition_function']:
         if len(trans) != 3:
-            print(f"Transição inválida: {trans}. Esperado formato [estado, simbolo, estado].")
+            print(f"Invalid transition: {trans}. Expected format [state, symbol, state].")
             continue
-        if trans[0] not in transicoes.keys():
-            transicoes[trans[0]] = {}
-        transicoes[trans[0]][trans[1]] = trans[2]
+        if trans[0] not in transitions.keys():
+            transitions[trans[0]] = {}
+        transitions[trans[0]][trans[1]] = trans[2]
     
-    for estado in transicoes.keys():
-        aAlterar = []
-        for alfabeto1 in transicoes[estado].keys():
-            for alfabeto2 in transicoes[estado].keys():
-                if alfabeto1 != alfabeto2 and transicoes[estado][alfabeto1] == transicoes[estado][alfabeto2]:
-                    destino = transicoes[estado][alfabeto1]
-                    aAlterar.append([alfabeto1, destino, 0])
-                    aAlterar.append([alfabeto2, destino, 0])
+    for state in transitions.keys():
+        to_modify = []
+        for alphabet1 in transitions[state].keys():
+            for alphabet2 in transitions[state].keys():
+                if alphabet1 != alphabet2 and transitions[state][alphabet1] == transitions[state][alphabet2]:
+                    destination = transitions[state][alphabet1]
+                    to_modify.append([alphabet1, destination, 0])
+                    to_modify.append([alphabet2, destination, 0])
     
-        aAlterar = [list(x) for x in set(tuple(x) for x in aAlterar)]
+        to_modify = [list(x) for x in set(tuple(x) for x in to_modify)]
     
         flag = True
         while flag:
             flag = False
-            for exp1 in aAlterar:
-                for exp2 in aAlterar:
+            for exp1 in to_modify:
+                for exp2 in to_modify:
                     if exp1[0] != exp2[0] and exp1[1] == exp2[1]:
                         if exp1[2] == 0:
                             exp1[0] += "+"+exp2[0]
                             exp1[2] = 1
                             exp2[2] = 1
-                            aAlterar.remove(exp2)
+                            to_modify.remove(exp2)
                             flag = True
                         elif exp2[2] == 0:
                             exp1[0] += "+"+exp2[0]
                             exp1[2] = 1
                             exp2[2] = 1
-                            aAlterar.remove(exp2)
+                            to_modify.remove(exp2)
                             flag = True
-        aExcluir = []
-        for chave in transicoes[estado].keys():
-            for trans in aAlterar:
-                if chave in trans[0]:
-                    aExcluir.append(chave)
-        for chave in aExcluir:
-            del transicoes[estado][chave]
+        to_remove = []
+        for key in transitions[state].keys():
+            for trans in to_modify:
+                if key in trans[0]:
+                    to_remove.append(key)
+        for key in to_remove:
+            del transitions[state][key]
               
-        for trans in aAlterar:
-            transicoes[estado][trans[0]] = trans[1]
+        for trans in to_modify:
+            transitions[state][trans[0]] = trans[1]
         
-    AFD['funcao_transicao'] = []
-    for estado in transicoes.keys():
-        for alfabeto in transicoes[estado].keys():
-            AFD['funcao_transicao'].append([estado, alfabeto, transicoes[estado][alfabeto]])
+    DFA['transition_function'] = []
+    for state in transitions.keys():
+        for alphabet in transitions[state].keys():
+            DFA['transition_function'].append([state, alphabet, transitions[state][alphabet]])
     
-    while len(AFD['estados']) > 2:
-        novasTransicoes = copy.deepcopy(AFD['funcao_transicao'])
+    while len(DFA['states']) > 2:
+        new_transitions = copy.deepcopy(DFA['transition_function'])
         
-        estadoEliminar = ""
-        for estado in AFD['estados']:
-            if estado not in AFD['estados_iniciais'] and estado not in AFD['estados_finais']:
-                estadoEliminar = estado
+        state_to_remove = ""
+        for state in DFA['states']:
+            if state not in DFA['initial_states'] and state not in DFA['final_states']:
+                state_to_remove = state
                 break
-        for estado1 in AFD['estados']:
-            for estado2 in AFD['estados']:
-                if estado1 in AFD['estados_finais']:
+        for state1 in DFA['states']:
+            for state2 in DFA['states']:
+                if state1 in DFA['final_states']:
                     continue
-                if estado2 in AFD['estados_iniciais']:
+                if state2 in DFA['initial_states']:
                     continue
                 R1 = ""
                 R2 = ""
                 R3 = ""
                 R4 = ""
-                for trans in AFD['funcao_transicao']:
-                    if trans[0] == estado1 and trans[2] == estadoEliminar:
+                for trans in DFA['transition_function']:
+                    if trans[0] == state1 and trans[2] == state_to_remove:
                         R1 = trans[1]
-                    if trans[0] == estadoEliminar and trans[2] == estadoEliminar:
+                    if trans[0] == state_to_remove and trans[2] == state_to_remove:
                         R2 = trans[1]
-                    if trans[0] == estadoEliminar and trans[2] == estado2:
+                    if trans[0] == state_to_remove and trans[2] == state2:
                         R3 = trans[1]
-                    if trans[0] == estado1 and trans[2] == estado2:
+                    if trans[0] == state1 and trans[2] == state2:
                         R4 = trans[1]
-                
                 
                 R = ""
                 if R1 and R3:
@@ -268,44 +253,25 @@ def converterParaER(AFD):
                 if R and R != "$" and len(R) > 1:
                     R = "("+R+")"
                 
-                adicionado = False    
-                for trans in novasTransicoes:
-                    if estado1 == trans[0] and estado2 == trans[2]:
+                added = False    
+                for trans in new_transitions:
+                    if state1 == trans[0] and state2 == trans[2]:
                         trans[1] = R
-                        adicionado = True
-                if not adicionado and R:
-                    novasTransicoes.append([estado1, R, estado2])
-            
-            
-        AFD['estados'].remove(estadoEliminar)
-        aExcluir = []
-        for trans in novasTransicoes:
-            if trans[0] == estadoEliminar or trans[2] == estadoEliminar:
-                aExcluir.append(trans)
-        for trans in aExcluir:
-            novasTransicoes.remove(trans)
-            
-        AFD['funcao_transicao'] = novasTransicoes
+                        added = True
+                if not added:
+                    new_transitions.append([state1, R, state2])
+                
+        DFA['transition_function'] = new_transitions
+        DFA['states'] = [state for state in DFA['states'] if state != state_to_remove]
+        DFA['final_states'] = [state for state in DFA['final_states'] if state != state_to_remove]
     
-    # Retorna apenas a expressão regular
-    if AFD['funcao_transicao']:
-        return AFD['funcao_transicao'][0][1]
-    else:
-        return ""
+    return DFA
 
-# Leitura das entradas do usuário
-afn = ler_entradas_usuario()
 
-# Chamada da função para converter o AFN em AFD
-afd = AFD.converter_afn_para_afd(afn)
+# Convert NFA to DFA
+nfa = read_user_input()
+dfa = DFA.convert_nfa_to_dfa(nfa)
 
-# tirar os transicoes vazias
-transicoes = converter_transicoes(afd.transicoes)
-
-# le o afd para o tipo da conversão para a expressão
-novo_afd = lerAFD(afd.estados, afd.alfabeto, transicoes, afd.estado_inicial, afd.estados_finais)
-
-# converter afd para expressão regular
-er = converterParaER(novo_afd)
-
-print(f"expressão regular: {er}")
+# Generate Expression Regular from DFA
+dfa_ER = convert_to_ER(dfa)
+print("Generated ER from DFA:", dfa_ER)
